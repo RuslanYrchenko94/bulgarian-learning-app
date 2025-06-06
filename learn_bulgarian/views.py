@@ -1,62 +1,59 @@
-import timedelta
-from django.shortcuts import render, redirect
+from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
+from django.shortcuts import render, get_object_or_404
+from django.views.generic import ListView, DetailView
 from .models import Word, Lesson
-from django.contrib.auth.decorators import login_required
-from .models import FlashCard
-from datetime import date
+from .forms import DictionarySearchForm
+
+
+class DictionaryView(ListView):
+    """
+    View for displaying and searching words in dictionary.
+    Supports pagination and search functionality.
+    """
+    model = Word
+    template_name = 'dictionary.html'
+    context_object_name = 'words'
+    paginate_by = 20  # Number of words per page
+
+    def get_queryset(self):
+        queryset = super().get_queryset()
+        search_query = self.request.GET.get('q')
+
+        if search_query:
+            return queryset.filter(
+                models.Q(bulgarian__icontains=search_query) |
+                models.Q(translation__icontains=search_query)
+            )
+        return queryset
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['search_form'] = DictionarySearchForm(self.request.GET or None)
+        return context
+
+
+class LessonListView(ListView):
+    """View for displaying list of all available lessons"""
+    model = Lesson
+    template_name = 'lessons_list.html'
+    context_object_name = 'lessons'
+    ordering = ['level']
+
+
+class LessonDetailView(DetailView):
+    """View for displaying single lesson details"""
+    model = Lesson
+    template_name = 'lesson_detail.html'
+    context_object_name = 'lesson'
+
 
 def home(request):
-    return render(request, 'learn_bulgarian/home.html')
+    """Home page view with basic statistics and quick actions"""
+    total_words = Word.objects.count()
+    total_lessons = Lesson.objects.count()
 
-def dictionary(request):
-    words = Word.objects.all()
-    query = request.GET.get('q')
-    if query:
-        words = words.filter(bulgarian__icontains=query) | words.filter(translation__icontains=query)
-    return render(request, 'learn_bulgarian/dictionary.html', {'words': words})
-
-def lessons_list(request):
-    lessons = Lesson.objects.all()
-    return render(request, 'learn_bulgarian/lessons.html', {'lessons': lessons})
-
-
-@login_required
-def flashcards(request):
-    today = date.today()
-    cards = FlashCard.objects.filter(
-        user=request.user,
-        next_review__lte=today
-    ).order_by('next_review')[:5]
-
-    if request.method == 'POST':
-        card_id = request.POST.get('card_id')
-        quality = int(request.POST.get('quality'))
-        card = FlashCard.objects.get(id=card_id)
-
-        # Алгоритм SuperMemo 2
-        if quality >= 3:
-            if card.repetition == 0:
-                card.next_review = today + timedelta(days=1)
-            elif card.repetition == 1:
-                card.next_review = today + timedelta(days=6)
-            else:
-                card.next_review = today + timedelta(days=round(card.ease_factor))
-            card.ease_factor = max(1.3, card.ease_factor + 0.1 - (5 - quality) * (0.08 + (5 - quality) * 0.02))
-        else:
-            card.repetition = 0
-            card.next_review = today + timedelta(days=1)
-
-        card.repetition += 1
-        card.save()
-        return redirect('flashcards')
-
-    return render(request, 'learn_bulgarian/flashcards.html', {'cards': cards})
-
-
-    progress, created = UserProgress.objects.get_or_create(user=request.user)
-    progress_percent = progress.get_progress()
-
-    return render(request, 'learn_bulgarian/flashcards.html', {
-        'cards': cards,
-        'progress': progress_percent
-    })
+    context = {
+        'total_words': total_words,
+        'total_lessons': total_lessons,
+    }
+    return render(request, 'home.html', context)
