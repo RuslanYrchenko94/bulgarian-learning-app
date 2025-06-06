@@ -1,0 +1,32 @@
+{% extends "learn_bulgarian/base.html" %}
+{% block content %}
+<h2>Словник</h2>
+<form class="mb-4">
+    <input type="text" name="q" placeholder="Пошук..." class="form-control">
+</form>
+<table class="table">
+    <thead>
+        <tr>
+            <th>Болгарська</th>
+            <th>Переклад</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for word in words %}
+        <tr>
+            <td>{{ word.bulgarian }}</td>
+            <td>{{ word.translation }}</td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
+{% endblock %}
+<td>
+    {{ word.bulgarian }}
+    {% if word.audio %}
+    <button onclick="document.getElementById('audio-{{ word.id }}').play()" class="btn btn-sm btn-outline-primary">
+        <i class="bi bi-volume-up"></i>
+    </button>
+    <audio id="audio-{{ word.id }}" src="{{ word.audio.url }}"></audio>
+    {% endif %}
+</td>

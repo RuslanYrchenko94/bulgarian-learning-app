@@ -1,0 +1,8 @@
+/* Додайте до static/css/styles.css */
+.card-flip {
+    transition: transform 0.6s;
+    transform-style: preserve-3d;
+}
+.card-flip:hover {
+    transform: rotateY(180deg);
+}

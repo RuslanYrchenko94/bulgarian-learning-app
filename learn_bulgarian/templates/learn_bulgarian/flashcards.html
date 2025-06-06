@@ -1,0 +1,35 @@
+{% extends "learn_bulgarian/base.html" %}
+
+{% block content %}
+<div class="container mt-5">
+    <h2 class="mb-4">Тренування слів</h2>
+    
+    {% if cards %}
+    <div class="card mb-4">
+        <div class="card-body text-center">
+            <h3 class="card-title">{{ cards.0.word.bulgarian }}</h3>
+            <p class="card-text">{{ cards.0.word.translation }}</p>
+            <p class="text-muted">{{ cards.0.word.example }}</p>
+            
+            <form method="post" class="mt-4">
+                {% csrf_token %}
+                <input type="hidden" name="card_id" value="{{ cards.0.id }}">
+                <div class="btn-group">
+                    <button type="submit" name="quality" value="1" class="btn btn-danger">Складно</button>
+                    <button type="submit" name="quality" value="3" class="btn btn-warning">Нормально</button>
+                    <button type="submit" name="quality" value="5" class="btn btn-success">Легко</button>
+                </div>
+            </form>
+        </div>
+    </div>
+    {% else %}
+    <div class="alert alert-info">
+        На сьогодні всі слова вивчені! Повторіть завтра або додайте нові слова.
+    </div>
+    {% endif %}
+    
+    <div class="progress mt-4">
+        <div class="progress-bar" style="width: {{ progress }}%"></div>
+    </div>
+</div>
+{% endblock %}
