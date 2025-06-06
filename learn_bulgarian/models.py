@@ -7,6 +7,7 @@ class Word(models.Model):
     translation = models.CharField(max_length=100, verbose_name="Переклад")
     example = models.TextField(blank=True, verbose_name="Приклад використання")
     category = models.CharField(max_length=50, blank=True, verbose_name="Категорія")
+    audio = models.FileField(upload_to='audio/', blank=True, null=True)
 
     def __str__(self):
         return f"{self.bulgarian} → {self.translation}"
@@ -31,10 +32,6 @@ class FlashCard(models.Model):
 
     def __str__(self):
         return f"Картка {self.word.bulgarian} для {self.user.username}"
-
-class Word(models.Model):
-    # ... інші поля ...
-    audio = models.FileField(upload_to='audio/', blank=True, null=True)
 
 
 class UserProgress(models.Model):
